@@ -1,0 +1,2178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Bleeding Edge | AppADay 063</title>
+<meta name="description" content="Enter any subject area and see where its research frontier actually is: active fronts, recent findings graded by provenance, methods worth borrowing from neighboring fields, and the open ground nobody has claimed yet.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #0E141A;
+    --strata: #16202A;
+    --strata-2: #1D2A36;
+    --line: rgba(232,228,218,0.10);
+    --line-strong: rgba(232,228,218,0.20);
+    --bone: #E8E4DA;
+    --dim: #8E9BA7;
+    --dimmer: #5F6D79;
+    --edge: #FF3D5A;
+    --edge-soft: rgba(255,61,90,0.16);
+    --verified: #46C7B8;
+    --moon: #F2B544;
+    --focus: #7FB8E8;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; min-height: 100dvh; }
+
+  body {
+    background-color: var(--void);
+    background-image:
+      linear-gradient(rgba(232,228,218,0.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,228,218,0.028) 1px, transparent 1px),
+      radial-gradient(ellipse at 50% -10%, rgba(127,184,232,0.10) 0, transparent 60%);
+    background-size: 44px 44px, 44px 44px, 100% 100%;
+    color: var(--bone);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  a { color: var(--focus); }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+    margin: 0;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar a.back {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--dim);
+    text-decoration: none;
+  }
+  .topbar a.back:hover { color: var(--bone); }
+  .stamp {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+  }
+  .gear-btn {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    color: var(--dim);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+  .gear-btn:hover { color: var(--bone); border-color: var(--bone); }
+  .gear-btn:active { transform: scale(0.94); }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 44px 0 8px; }
+  h1 {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(48px, 12vw, 86px);
+    line-height: 0.95;
+    letter-spacing: -0.015em;
+    margin: 14px 0 0;
+  }
+  h1 .cut { position: relative; display: inline-block; font-style: italic; }
+  h1 .cut::after {
+    content: "";
+    position: absolute;
+    left: 0; right: -0.06em;
+    bottom: 0.06em;
+    height: 2px;
+    background: var(--edge);
+    box-shadow: 0 6px 22px 2px rgba(255,61,90,0.55);
+  }
+  .lede { color: var(--dim); max-width: 56ch; margin: 22px 0 0; font-size: 17px; }
+
+  /* ---------- console ---------- */
+  .console {
+    margin-top: 30px;
+    background: linear-gradient(180deg, var(--strata-2), var(--strata));
+    border: 1px solid var(--line-strong);
+    border-radius: 4px;
+    padding: 20px;
+  }
+  .field-label {
+    display: block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+    margin: 0 0 10px;
+  }
+  input[type="text"] {
+    width: 100%;
+    background: var(--void);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    color: var(--bone);
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 17px;
+    padding: 14px;
+  }
+  input[type="text"]::placeholder { color: var(--dimmer); }
+  input[type="text"]:focus,
+  input[type="password"]:focus,
+  button:focus-visible,
+  a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .label-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 20px 0 10px;
+  }
+  .info-btn {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    color: var(--dimmer);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+  .info-btn:hover { color: var(--bone); border-color: var(--bone); }
+
+  button.linkish {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--focus);
+    font: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--dim);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    padding: 8px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    min-height: 36px;
+  }
+  .pill[aria-pressed="true"] {
+    background: var(--edge-soft);
+    border-color: var(--edge);
+    color: var(--bone);
+  }
+  .pill-note {
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: var(--dimmer);
+    min-height: 20px;
+  }
+
+  .scan-btn {
+    margin-top: 20px;
+    width: 100%;
+    background: var(--edge);
+    border: none;
+    border-radius: 3px;
+    color: #14080B;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 16px;
+    min-height: 52px;
+    cursor: pointer;
+    box-shadow: 0 0 0 0 rgba(255,61,90,0.5);
+    transition: box-shadow 160ms ease, transform 80ms ease;
+  }
+  .scan-btn:hover { box-shadow: 0 0 30px 0 rgba(255,61,90,0.45); }
+  .scan-btn:active { transform: translateY(1px); }
+  .scan-btn[disabled] { opacity: 0.45; cursor: default; box-shadow: none; }
+
+  .console-note { margin: 14px 0 0; font-size: 13px; color: var(--dimmer); }
+  .console-note button.linkish {
+    background: none; border: none; padding: 0;
+    color: var(--focus); font: inherit; cursor: pointer; text-decoration: underline;
+  }
+
+  /* ---------- watchlist ---------- */
+  .watch { margin-top: 26px; }
+  .watch[hidden] { display: none; }
+  .watch-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .watch-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--strata);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    padding: 0 0 0 12px;
+    min-height: 38px;
+  }
+  .watch-chip button.open {
+    background: none; border: none; padding: 9px 0;
+    color: var(--bone);
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .watch-chip button.open:hover { color: var(--verified); }
+  .watch-chip .age {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+  }
+  .watch-chip button.drop {
+    background: none; border: none;
+    border-left: 1px solid var(--line);
+    color: var(--dimmer);
+    font-size: 15px;
+    line-height: 1;
+    padding: 11px 12px;
+    cursor: pointer;
+    align-self: stretch;
+  }
+  .watch-chip button.drop:hover { color: var(--edge); }
+
+  /* ---------- status ---------- */
+  .status {
+    margin-top: 26px;
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--edge);
+    background: var(--strata);
+    padding: 18px 20px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    color: var(--dim);
+  }
+  .status .tick { color: var(--edge); }
+  .status.err { border-left-color: var(--moon); color: var(--bone); }
+  .status.err strong { color: var(--moon); font-weight: 600; }
+  @keyframes sweep { 0% { opacity: 0.25; } 50% { opacity: 1; } 100% { opacity: 0.25; } }
+  .status .pulse { animation: sweep 1.4s ease-in-out infinite; }
+
+  .prog-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .prog-phase { color: var(--bone); }
+  .prog-clock { color: var(--dimmer); white-space: nowrap; }
+  .bar {
+    margin-top: 12px;
+    height: 3px;
+    background: rgba(232,228,218,0.10);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .bar .fill {
+    height: 100%;
+    width: 0;
+    background: var(--edge);
+    box-shadow: 0 0 12px 0 rgba(255,61,90,0.6);
+    transition: width 400ms ease;
+  }
+  .bar .fill.done { background: var(--verified); box-shadow: none; }
+  .queries { list-style: none; margin: 14px 0 0; padding: 0; }
+  .queries li {
+    font-size: 12px;
+    color: var(--dim);
+    padding: 3px 0;
+    word-break: break-word;
+  }
+  .queries li::before {
+    content: "search ";
+    color: var(--verified);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+  .queries li.pending { color: var(--dimmer); }
+  .queries li.pending::before { color: var(--dimmer); }
+
+  .mini-bar {
+    margin-top: 14px;
+    height: 2px;
+    background: rgba(232,228,218,0.10);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .mini-bar .fill {
+    height: 100%;
+    width: 0;
+    background: var(--edge);
+    transition: width 400ms ease;
+  }
+
+  .model-list { display: grid; gap: 8px; margin-top: 4px; }
+  .model-opt {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--void);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    padding: 12px 14px;
+    cursor: pointer;
+    color: var(--dim);
+  }
+  .model-opt[aria-pressed="true"] { border-color: var(--edge); background: var(--edge-soft); }
+  .model-opt .m-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .model-opt .m-name {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--bone);
+  }
+  .model-opt .m-cost {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+    white-space: nowrap;
+  }
+  .model-opt .m-note {
+    display: block;
+    margin-top: 5px;
+    font-size: 13px;
+    line-height: 1.45;
+    font-family: "IBM Plex Sans", sans-serif;
+  }
+
+  /* ---------- results ---------- */
+  .results { margin-top: 44px; }
+  .results[hidden] { display: none; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin-bottom: 22px;
+  }
+  h2 {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-weight: 400;
+    font-size: 30px;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .count {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--dimmer);
+    white-space: nowrap;
+  }
+
+  .field-name {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-size: clamp(30px, 7vw, 44px);
+    line-height: 1.08;
+    margin: 10px 0 0;
+    font-weight: 400;
+  }
+  .field-state { color: var(--dim); max-width: 66ch; margin: 16px 0 0; }
+  .scanned {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--dimmer);
+    margin-top: 18px;
+  }
+  .delta {
+    margin-top: 16px;
+    border-left: 2px solid var(--verified);
+    padding-left: 12px;
+    font-size: 14px;
+    color: var(--bone);
+  }
+  .delta.quiet { border-left-color: var(--dimmer); color: var(--dimmer); }
+
+  .block { margin-top: 54px; }
+
+  .cards { display: grid; gap: 14px; }
+  @media (min-width: 700px) { .cards.two { grid-template-columns: 1fr 1fr; } }
+
+  .card {
+    background: var(--strata);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--line-strong);
+    border-radius: 3px;
+    padding: 18px;
+  }
+  .card.borrow { border-left-color: var(--verified); }
+  .card h3 {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    margin: 8px 0;
+    line-height: 1.3;
+  }
+  .card p { margin: 0; color: var(--dim); font-size: 15px; }
+  .why-now, .transfer {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-size: 14px;
+  }
+  .why-now span, .transfer span {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+    display: block;
+    margin-bottom: 5px;
+  }
+  .method-name {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    color: var(--verified);
+    margin-bottom: 10px;
+  }
+
+  /* recent work */
+  .paper { border-bottom: 1px solid var(--line); padding: 18px 0; display: grid; gap: 7px; }
+  .paper:first-child { padding-top: 0; }
+  .paper .title { font-weight: 600; font-size: 16px; line-height: 1.35; }
+  .paper .meta {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--dim);
+    letter-spacing: 0.02em;
+  }
+  .paper .finding { color: var(--dim); font-size: 15px; }
+  .paper a.src {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--focus);
+    word-break: break-word;
+    justify-self: start;
+  }
+  .badges { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+
+  .tag {
+    display: inline-block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+  .tag.accessible, .tag.peer { color: var(--verified); }
+  .tag.ambitious, .tag.preprint { color: var(--moon); }
+  .tag.moonshot { color: var(--edge); }
+  .tag.secondary { color: var(--dimmer); }
+  .tag.fresh { color: var(--void); background: var(--verified); border-color: var(--verified); font-weight: 600; }
+
+  .caution {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--dimmer);
+    border-left: 2px solid var(--verified);
+    padding-left: 12px;
+  }
+  .caution strong { color: var(--dim); font-weight: 600; }
+
+  /* ---------- the bleeding edge divider ---------- */
+  .edge-rule { margin: 66px -20px 0; position: relative; height: 150px; }
+  .edge-rule .line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--edge) 12%, var(--edge) 88%, transparent);
+  }
+  .edge-rule .bleed {
+    position: absolute;
+    top: 2px; left: 0; right: 0; height: 148px;
+    background: linear-gradient(180deg, rgba(255,61,90,0.42), rgba(255,61,90,0.10) 34%, transparent 88%);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    animation: drip 6s ease-in-out infinite;
+  }
+  @keyframes drip { 0%, 100% { opacity: 0.72; } 50% { opacity: 1; } }
+  .edge-rule .label {
+    position: absolute;
+    top: 26px; left: 20px; right: 20px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--bone);
+  }
+  .edge-rule .sub {
+    position: absolute;
+    top: 54px; left: 20px; right: 20px;
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-size: clamp(22px, 5.4vw, 32px);
+    color: var(--bone);
+    max-width: 30ch;
+    line-height: 1.15;
+  }
+
+  /* ---------- gaps ---------- */
+  .gap {
+    background: var(--strata);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--edge);
+    border-radius: 3px;
+    padding: 20px;
+  }
+  .gap + .gap { margin-top: 14px; }
+  .gap .q {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-size: 23px;
+    line-height: 1.24;
+    margin: 12px 0;
+  }
+  .gap .why { color: var(--dim); font-size: 15px; margin: 0; }
+
+  .chart-btn {
+    margin-top: 18px;
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--bone);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    min-height: 44px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .chart-btn:hover { border-color: var(--edge); color: var(--edge); }
+  .chart-btn[disabled] { opacity: 0.5; cursor: default; }
+
+  .plan { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .plan h4 {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+    margin: 22px 0 8px;
+    font-weight: 500;
+  }
+  .plan h4:first-child { margin-top: 0; }
+  .plan p { margin: 0; font-size: 15px; color: var(--bone); }
+  .plan .sharp { font-family: "Instrument Serif", Georgia, serif; font-size: 21px; line-height: 1.3; }
+  .plan ol, .plan ul { margin: 0; padding-left: 20px; color: var(--dim); font-size: 15px; }
+  .plan li { margin-bottom: 8px; }
+  .plan li strong { color: var(--bone); font-weight: 600; }
+
+  /* ---------- toolbox ---------- */
+  .toolbox {
+    background: var(--strata);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 20px;
+    display: grid;
+    gap: 22px;
+  }
+  @media (min-width: 700px) { .toolbox { grid-template-columns: 1fr 1fr; } }
+  .toolbox .k {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+    margin: 0 0 10px;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    background: var(--void);
+    border: 1px solid var(--line-strong);
+    color: var(--dim);
+    padding: 6px 10px;
+    border-radius: 2px;
+  }
+  .venues { margin: 0; padding-left: 18px; color: var(--dim); font-size: 14px; }
+  .venues li { margin-bottom: 6px; }
+
+  /* ---------- actions ---------- */
+  .actions { margin-top: 44px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .ghost-btn {
+    flex: 1 1 190px;
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--bone);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 15px;
+    min-height: 48px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover { border-color: var(--bone); }
+  .ghost-btn[disabled] { opacity: 0.5; cursor: default; }
+  .ghost-btn.rescan { border-color: rgba(70,199,184,0.5); color: var(--verified); }
+
+  footer.foot {
+    margin-top: auto;
+    padding-top: 60px;
+    text-align: center;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--dimmer);
+  }
+  footer.foot a { color: var(--dim); text-decoration: none; }
+  footer.foot a:hover { color: var(--bone); }
+
+  /* ---------- settings ---------- */
+  .overlay {
+    position: fixed;
+    top: 0; right: 0; bottom: 0; left: 0;
+    inset: 0;
+    background: rgba(6,10,14,0.86);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .modal {
+    width: 100%;
+    max-width: 440px;
+    background: var(--strata-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 4px;
+    padding: 24px;
+  }
+  .modal.wide { max-width: 580px; max-height: 84dvh; overflow-y: auto; }
+  .modal h3 {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-weight: 400;
+    font-size: 26px;
+    margin: 0 0 6px;
+  }
+
+  .guide-h {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+    margin: 28px 0 4px;
+  }
+  .guide-row { border-top: 1px solid var(--line); padding: 13px 0; }
+  .guide-row .name {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .guide-row .name.hs, .guide-row .name.ug { color: var(--bone); }
+  .guide-row .name.gr, .guide-row .name.rs { color: var(--bone); }
+  .guide-row .name.peer, .guide-row .name.accessible { color: var(--verified); }
+  .guide-row .name.preprint, .guide-row .name.ambitious { color: var(--moon); }
+  .guide-row .name.secondary { color: var(--dimmer); }
+  .guide-row .name.moonshot { color: var(--edge); }
+  .guide-row p { margin: 0; font-size: 14px; color: var(--dim); line-height: 1.5; }
+  .guide-note { margin: 18px 0 0; font-size: 13px; color: var(--dimmer); }
+  .modal p.sub { color: var(--dim); font-size: 14px; margin: 0 0 20px; }
+  .modal label {
+    display: block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--dimmer);
+    margin-bottom: 8px;
+  }
+  .modal input[type="password"] {
+    width: 100%;
+    background: var(--void);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    color: var(--bone);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 14px;
+    padding: 12px;
+  }
+  .help-text { display: block; margin-top: 10px; font-size: 13px; color: var(--dimmer); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .modal-actions button {
+    flex: 1;
+    min-height: 46px;
+    border-radius: 3px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .btn-save { background: var(--bone); border: none; color: var(--void); font-weight: 600; }
+  .btn-close { background: transparent; border: 1px solid var(--line-strong); color: var(--dim); }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    background: var(--bone);
+    color: var(--void);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 12px 18px;
+    border-radius: 3px;
+    z-index: 60;
+    max-width: 90vw;
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <a class="back" href="https://augustineiacopelli.github.io/appaday/">&larr; AppADay</a>
+    <span class="stamp">063 &middot; Educational</span>
+    <button class="gear-btn" id="gearBtn" aria-label="Settings">&#9881;</button>
+  </header>
+
+  <section class="hero">
+    <p class="eyebrow">Research reconnaissance</p>
+    <h1>Bleeding <span class="cut">Edge</span></h1>
+    <p class="lede">Name a subject. See where the work has actually reached, what has just been published, and which questions nobody has taken yet. Then turn one of those questions into a plan you can start on tonight.</p>
+
+    <div class="console">
+      <label class="field-label" for="subject">Subject area</label>
+      <input type="text" id="subject" autocomplete="off" spellcheck="false" placeholder="e.g. mycorrhizal networks, Thomistic ethics, retrieval-augmented generation">
+
+      <div class="label-row">
+        <p class="field-label" id="levelLabel" style="margin:0;">Write for</p>
+        <button class="info-btn" id="guideBtn" type="button" aria-label="How to read this brief">?</button>
+      </div>
+      <div class="pills" id="levelGroup" role="group" aria-labelledby="levelLabel"></div>
+      <p class="pill-note" id="levelNote"></p>
+
+      <button class="scan-btn" id="scanBtn">Scan the frontier</button>
+      <p class="console-note" id="keyNote"></p>
+    </div>
+
+    <div class="watch" id="watch" hidden>
+      <p class="eyebrow" style="margin-bottom:12px;">Watching</p>
+      <div class="watch-chips" id="watchChips"></div>
+    </div>
+
+    <div id="status" hidden></div>
+  </section>
+
+  <section class="results" id="results" hidden></section>
+
+  <footer class="foot">
+    <a href="https://augustineiacopelli.github.io/appaday/">AppADay 063 &mdash; Bleeding Edge</a>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var CLAUDE_MODEL = "claude-sonnet-5";
+  var API_URL = "https://api.anthropic.com/v1/messages";
+  var WEB_SEARCH_TOOL = "web_search_20250305";
+  var MAX_SEARCHES = 6;
+  var MAX_WATCHED = 12;
+
+  /* rough character counts of a finished payload, used to pace the bar */
+  var SCAN_CHARS = 4200;
+  var PLAN_CHARS = 1500;
+
+  var MODELS = [
+    {
+      id: "claude-sonnet-5",
+      name: "Sonnet 5",
+      cost: "Baseline cost",
+      note: "The default. On search-and-reason benchmarks it lands within half a point of Opus, for a fraction of the price."
+    },
+    {
+      id: "claude-opus-4-8",
+      name: "Opus 4.8",
+      cost: "About 2.5x",
+      note: "Sharper judgment. Worth the money for a Researcher brief, or when the provenance grades have to be right."
+    },
+    {
+      id: "claude-sonnet-4-6",
+      name: "Sonnet 4.6",
+      cost: "About 1.5x",
+      note: "The previous default across AppADay. Kept for parity, and for keys without access to the newer models."
+    }
+  ];
+
+  var LS = {
+    apikey: "bleedingedge.apikey",
+    level: "bleedingedge.level",
+    model: "bleedingedge.model",
+    watch: "bleedingedge.watch"
+  };
+
+  var LEVELS = ["High School", "Undergraduate", "Graduate", "Researcher"];
+
+  /* older builds stored Doctoral and Faculty on this key */
+  var LEVEL_MIGRATE = { "Doctoral": "Researcher", "Faculty": "Researcher" };
+
+  var LEVEL_NOTE = {
+    "High School": "Open sources only. Questions you could actually attempt.",
+    "Undergraduate": "Terms defined on first use. Nothing assumed.",
+    "Graduate": "Brief orientation, then specifics. Seminar background assumed.",
+    "Researcher": "No fundamentals. Argues the disagreement, judges the field."
+  };
+
+  var LEVEL_TONE = {
+    "High School":
+      "Write to a curious, capable high school student who has taken the standard science and history sequence and nothing beyond it. " +
+      "Define every technical term the first time it appears, and prefer a concrete example to an abstraction every time. " +
+      "Never use an acronym or a Greek letter without unpacking it. Do not talk down: this reader can handle a hard idea, " +
+      "but cannot yet handle an idea stated in the field's private vocabulary.",
+    "Undergraduate":
+      "Write to explain. Define every technical term the first time it appears. Assume an introductory course in the field and no more. " +
+      "Prefer concrete examples over abstractions. Never use a Greek letter or an acronym without unpacking it.",
+    "Graduate":
+      "Write to orient, then to specify. Assume the reader has finished a first-year graduate seminar in the discipline. " +
+      "Name schools of thought and cite the standard reference works by name. Do not define common terms of art.",
+    "Researcher":
+      "Assume complete command of the field. Do not explain fundamentals. Write to argue and to judge. " +
+      "Identify the live disagreement explicitly, state which position the current evidence favors and why, and where the evidence is " +
+      "genuinely balanced, say so and name what would break the tie. Then be evaluative about the field as an institution: " +
+      "say plainly which lines of work are overfunded relative to their yield, which are starved, and where the field is fooling itself. " +
+      "Commit to a judgment rather than surveying opinion."
+  };
+
+  var LEVEL_ACCESS = {
+    "High School":
+      "SOURCE ACCESS. This reader has no university library and no journal subscriptions. Strongly prefer open-access articles, " +
+      "preprint servers, PubMed Central, government and museum reports, and university press releases that link to a readable version. " +
+      "A citation this reader cannot open is worse than no citation. If the only version you can find sits behind a paywall, " +
+      "say so plainly in the finding sentence.",
+    "Undergraduate":
+      "SOURCE ACCESS. Assume a university library proxy. Paywalled journal articles are acceptable.",
+    "Graduate":
+      "SOURCE ACCESS. Assume full institutional access, including interlibrary loan.",
+    "Researcher":
+      "SOURCE ACCESS. Assume full institutional access, including interlibrary loan."
+  };
+
+  var LEVEL_GAPS = {
+    "High School":
+      "OPEN GROUND. Do not hand this reader an unattackable frontier problem. Handing a sixteen-year-old a question that " +
+      "requires a cryo-electron microscope is a way of making them feel small. Each gap must be something a determined high school " +
+      "student could make real progress on in one semester: a careful replication of a recent finding, a measurement nobody has " +
+      "bothered to take in a local setting, a public dataset nobody has re-analyzed, or a systematic comparison of published results " +
+      "that no one has assembled. State each as a question. Each must still be genuinely unanswered.",
+    "Undergraduate":
+      "OPEN GROUND. Each gap must be a genuinely unanswered question, stated as a question.",
+    "Graduate":
+      "OPEN GROUND. Each gap must be a genuinely unanswered question, stated as a question.",
+    "Researcher":
+      "OPEN GROUND. Each gap must be a genuinely unanswered question, stated as a question."
+  };
+
+  var TRACTABILITY_RULE =
+    "TRACTABILITY. Grade each gap relative to what this particular reader can plausibly command, not in the abstract. " +
+    "For a high school reader, Accessible means a public dataset, a classroom or kitchen-table setup, and one email to a " +
+    "researcher who might reply. For an undergraduate, it means a course project or a summer with a faculty mentor. " +
+    "For a graduate reader, it means feasible inside an existing lab's equipment within a year. " +
+    "For a researcher, it means fundable with a standard grant using apparatus that already exists. " +
+    "Ambitious means a real stretch beyond that reader's reach. Moonshot means the instrument or the theory does not exist yet, " +
+    "for anyone.";
+
+  var STATUS_LINES = [
+    "Reading the current literature",
+    "Mapping the active fronts",
+    "Grading sources by provenance",
+    "Sorting settled from unsettled",
+    "Checking the neighboring fields",
+    "Looking for the ground nobody has claimed",
+    "Drawing the edge"
+  ];
+
+  /* ---------------- storage ---------------- */
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } }
+  function lsDel(k) { try { localStorage.removeItem(k); } catch (e) { /* noop */ } }
+
+  function getKey() { return (lsGet(LS.apikey) || "").trim(); }
+
+  function modelIds() {
+    var out = [];
+    for (var i = 0; i < MODELS.length; i++) { out.push(MODELS[i].id); }
+    return out;
+  }
+  function getModel() {
+    var v = lsGet(LS.model);
+    return modelIds().indexOf(v) > -1 ? v : CLAUDE_MODEL;
+  }
+  function modelName(id) {
+    for (var i = 0; i < MODELS.length; i++) {
+      if (MODELS[i].id === id) { return MODELS[i].name; }
+    }
+    return id || CLAUDE_MODEL;
+  }
+  function getLevel() {
+    var v = lsGet(LS.level);
+    if (v && LEVEL_MIGRATE[v]) { v = LEVEL_MIGRATE[v]; lsSet(LS.level, v); }
+    return LEVELS.indexOf(v) > -1 ? v : LEVELS[1];
+  }
+  function levelOf(scan) {
+    var v = scan && scan.level;
+    if (v && LEVEL_MIGRATE[v]) { v = LEVEL_MIGRATE[v]; }
+    return LEVELS.indexOf(v) > -1 ? v : LEVELS[1];
+  }
+
+  function loadWatch() {
+    var raw = lsGet(LS.watch);
+    if (!raw) { return {}; }
+    try {
+      var o = JSON.parse(raw);
+      return (o && typeof o === "object") ? o : {};
+    } catch (e) { return {}; }
+  }
+  function saveWatch(w) {
+    try { lsSet(LS.watch, JSON.stringify(w)); } catch (e) { /* quota */ }
+  }
+  function watchKey(subject) {
+    return String(subject).toLowerCase().replace(/\s+/g, " ").trim();
+  }
+  function rememberScan(scan) {
+    var w = loadWatch();
+    w[watchKey(scan.subject)] = scan;
+    var keys = Object.keys(w);
+    if (keys.length > MAX_WATCHED) {
+      keys.sort(function (a, b) { return (w[a].ts || 0) - (w[b].ts || 0); });
+      while (keys.length > MAX_WATCHED) { delete w[keys.shift()]; }
+    }
+    saveWatch(w);
+  }
+
+  /* ---------------- helpers ---------------- */
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function safeUrl(u) {
+    var s = String(u == null ? "" : u).trim();
+    return (/^https?:\/\//i).test(s) ? s : "";
+  }
+  function shortUrl(u) {
+    var s = u.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+    return s.length > 52 ? s.slice(0, 52) + "..." : s;
+  }
+  function arr(v) { return Object.prototype.toString.call(v) === "[object Array]" ? v : []; }
+  function norm(s) { return String(s == null ? "" : s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
+
+  function todayStamp() {
+    var d = new Date();
+    var m = ["January", "February", "March", "April", "May", "June",
+             "July", "August", "September", "October", "November", "December"];
+    return m[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear();
+  }
+  function daysAgo(ts) {
+    if (!ts) { return ""; }
+    var d = Math.floor((Date.now() - ts) / 86400000);
+    if (d <= 0) { return "today"; }
+    if (d === 1) { return "1 day"; }
+    return d + " days";
+  }
+
+  function tagClass(t) {
+    var s = String(t || "").toLowerCase();
+    if (s.indexOf("moon") > -1) { return "moonshot"; }
+    if (s.indexOf("ambit") > -1) { return "ambitious"; }
+    return "accessible";
+  }
+  function provClass(t) {
+    var s = String(t || "").toLowerCase();
+    if (s.indexOf("preprint") > -1) { return "preprint"; }
+    if (s.indexOf("secondary") > -1 || s.indexOf("coverage") > -1 || s.indexOf("news") > -1) { return "secondary"; }
+    return "peer";
+  }
+  function provLabel(t) {
+    var c = provClass(t);
+    if (c === "preprint") { return "Preprint"; }
+    if (c === "secondary") { return "Secondary coverage"; }
+    return "Peer-reviewed";
+  }
+
+  function toast(msg) {
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(function () {
+      if (el.parentNode) { el.parentNode.removeChild(el); }
+    }, 2400);
+  }
+
+  function copyText(text, label) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast(label); },
+        function () { fallbackCopy(text, label); });
+    } else {
+      fallbackCopy(text, label);
+    }
+  }
+  function fallbackCopy(text, label) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); toast(label); }
+    catch (e) { toast("Copy failed"); }
+    document.body.removeChild(ta);
+  }
+
+  /* ---------------- elements ---------------- */
+  var subjectEl = document.getElementById("subject");
+  var levelGroup = document.getElementById("levelGroup");
+  var levelNote = document.getElementById("levelNote");
+  var scanBtn = document.getElementById("scanBtn");
+  var keyNote = document.getElementById("keyNote");
+  var statusEl = document.getElementById("status");
+  var resultsEl = document.getElementById("results");
+  var gearBtn = document.getElementById("gearBtn");
+  var watchEl = document.getElementById("watch");
+  var watchChips = document.getElementById("watchChips");
+
+  /* ---------------- level pills ---------------- */
+  function paintLevels() {
+    var current = getLevel();
+    levelGroup.innerHTML = "";
+    for (var i = 0; i < LEVELS.length; i++) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "pill";
+      b.textContent = LEVELS[i];
+      b.setAttribute("aria-pressed", LEVELS[i] === current ? "true" : "false");
+      b.setAttribute("data-level", LEVELS[i]);
+      levelGroup.appendChild(b);
+    }
+    levelNote.textContent = LEVEL_NOTE[current];
+  }
+
+  levelGroup.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest(".pill") : null;
+    if (!b) { return; }
+    lsSet(LS.level, b.getAttribute("data-level"));
+    paintLevels();
+  });
+
+  /* ---------------- watchlist ---------------- */
+  function paintWatch() {
+    var w = loadWatch();
+    var keys = Object.keys(w);
+    if (!keys.length) { watchEl.hidden = true; watchChips.innerHTML = ""; return; }
+    keys.sort(function (a, b) { return (w[b].ts || 0) - (w[a].ts || 0); });
+
+    var html = "";
+    for (var i = 0; i < keys.length; i++) {
+      var s = w[keys[i]];
+      html += '<span class="watch-chip">' +
+        '<button class="open" type="button" data-key="' + esc(keys[i]) + '">' +
+        esc(s.data && s.data.field ? s.data.field : s.subject) +
+        ' <span class="age">' + esc(daysAgo(s.ts)) + "</span></button>" +
+        '<button class="drop" type="button" data-drop="' + esc(keys[i]) + '" aria-label="Stop watching">&times;</button>' +
+        "</span>";
+    }
+    watchChips.innerHTML = html;
+    watchEl.hidden = false;
+  }
+
+  watchChips.addEventListener("click", function (e) {
+    var drop = e.target.closest ? e.target.closest("[data-drop]") : null;
+    if (drop) {
+      var w = loadWatch();
+      delete w[drop.getAttribute("data-drop")];
+      saveWatch(w);
+      paintWatch();
+      return;
+    }
+    var open = e.target.closest ? e.target.closest("[data-key]") : null;
+    if (!open) { return; }
+    var all = loadWatch();
+    var scan = all[open.getAttribute("data-key")];
+    if (!scan) { return; }
+    current = scan;
+    subjectEl.value = scan.subject;
+    clearStatus();
+    render(scan);
+    var r = resultsEl.getBoundingClientRect();
+    window.scrollTo(0, window.pageYOffset + r.top - 20);
+  });
+
+  /* ---------------- key note ---------------- */
+  function paintKeyNote() {
+    if (getKey()) {
+      keyNote.innerHTML = "Running on " + esc(modelName(getModel())) +
+        ". Claude searches the web live, so a scan takes about a minute. " +
+        '<button class="linkish" id="editKey" type="button">Key and model</button>';
+    } else {
+      keyNote.innerHTML = "Add an Anthropic API key to run a scan. " +
+        '<button class="linkish" id="editKey" type="button">Add key</button>';
+    }
+    var ek = document.getElementById("editKey");
+    if (ek) { ek.addEventListener("click", openSettings); }
+  }
+
+  /* ---------------- progress ---------------- */
+  var statusTimer = null;
+  var clockTimer = null;
+  var rotateTimer = null;
+
+  function mmss(ms) {
+    var s = Math.floor(ms / 1000);
+    var m = Math.floor(s / 60);
+    s = s % 60;
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+
+  function Progress(streaming) {
+    this.pct = 0;
+    this.started = Date.now();
+    this.searchesDone = 0;
+    this.searchesOpen = 0;
+    this.chars = 0;
+    this.streaming = streaming;
+    this.queries = [];
+  }
+
+  Progress.prototype.mount = function () {
+    statusEl.hidden = false;
+    statusEl.className = "status";
+    statusEl.innerHTML =
+      '<div class="prog-top">' +
+        '<span class="prog-phase" id="progPhase">Sending the question to Claude</span>' +
+        '<span class="prog-clock" id="progClock">0:00</span>' +
+      "</div>" +
+      '<div class="bar"><div class="fill" id="progFill"></div></div>' +
+      '<ul class="queries" id="progQueries"></ul>';
+    var self = this;
+    if (clockTimer) { clearInterval(clockTimer); }
+    clockTimer = setInterval(function () {
+      var el = document.getElementById("progClock");
+      if (el) { el.textContent = mmss(Date.now() - self.started); }
+    }, 1000);
+    this.set(4);
+  };
+
+  Progress.prototype.set = function (pct) {
+    if (pct <= this.pct) { return; }
+    this.pct = Math.min(100, pct);
+    var f = document.getElementById("progFill");
+    if (f) { f.style.width = this.pct + "%"; }
+  };
+
+  Progress.prototype.phase = function (text) {
+    var el = document.getElementById("progPhase");
+    if (el) { el.textContent = text; }
+  };
+
+  Progress.prototype.addQuery = function (q) {
+    this.queries.push(q);
+    var ul = document.getElementById("progQueries");
+    if (!ul) { return; }
+    var li = document.createElement("li");
+    li.textContent = q;
+    ul.appendChild(li);
+  };
+
+  /* search phase occupies 8 to 40 percent, writing 40 to 96, completion 100 */
+  Progress.prototype.event = function (ev) {
+    if (ev.t === "search_start") {
+      this.searchesOpen++;
+      this.phase("Searching the web");
+    } else if (ev.t === "query") {
+      this.addQuery(ev.q);
+    } else if (ev.t === "search_done") {
+      this.searchesDone++;
+      this.set(8 + 32 * (this.searchesDone / MAX_SEARCHES));
+      this.phase("Read " + this.searchesDone + " of up to " + MAX_SEARCHES + " searches");
+    } else if (ev.t === "writing") {
+      this.set(40);
+      this.phase(this.searchesDone ? "Composing the brief" : "Answering without a search");
+    } else if (ev.t === "text") {
+      this.chars = ev.len;
+      this.set(40 + 56 * Math.min(1, ev.len / (ev.est || SCAN_CHARS)));
+    }
+  };
+
+  Progress.prototype.finish = function () {
+    this.set(100);
+    var f = document.getElementById("progFill");
+    if (f) { f.className = "fill done"; }
+    this.phase("Brief ready");
+    if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+  };
+
+  /* fallback used when the browser cannot stream */
+  function rotateStatus() {
+    var i = 0;
+    if (rotateTimer) { clearInterval(rotateTimer); }
+    rotateTimer = setInterval(function () {
+      i = (i + 1) % STATUS_LINES.length;
+      var t = document.getElementById("progPhase");
+      if (t) { t.textContent = STATUS_LINES[i]; }
+    }, 4200);
+  }
+
+  function stopTimers() {
+    if (statusTimer) { clearInterval(statusTimer); statusTimer = null; }
+    if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+    if (rotateTimer) { clearInterval(rotateTimer); rotateTimer = null; }
+  }
+
+  function showError(msg) {
+    stopTimers();
+    statusEl.hidden = false;
+    statusEl.className = "status err";
+    statusEl.innerHTML = "<strong>Scan stopped.</strong> " + esc(msg);
+  }
+  function clearStatus() {
+    stopTimers();
+    statusEl.hidden = true;
+    statusEl.innerHTML = "";
+  }
+
+  /* ---------------- API ---------------- */
+  var CAN_STREAM = !!(window.ReadableStream && window.TextDecoder && window.fetch);
+
+  /* Parses one server-sent event object and reports what Claude is doing.
+     Returns accumulated assistant text via the state object. */
+  function handleEvent(ev, state, onEvent, fail) {
+    if (!ev || !ev.type) { return; }
+
+    if (ev.type === "error") {
+      fail(new Error((ev.error && ev.error.message) || "The stream failed partway through."));
+      return;
+    }
+
+    if (ev.type === "content_block_start") {
+      var cb = ev.content_block || {};
+      if (cb.type === "server_tool_use") {
+        state.toolInput[ev.index] = "";
+        onEvent({ t: "search_start" });
+      } else if (cb.type === "web_search_tool_result") {
+        onEvent({ t: "search_done" });
+      } else if (cb.type === "text") {
+        onEvent({ t: "writing" });
+      }
+      return;
+    }
+
+    if (ev.type === "content_block_delta") {
+      var d = ev.delta || {};
+      if (d.type === "text_delta") {
+        state.text += d.text;
+        onEvent({ t: "text", len: state.text.length, est: state.est });
+      } else if (d.type === "input_json_delta" && state.toolInput[ev.index] !== undefined) {
+        state.toolInput[ev.index] += (d.partial_json || "");
+      }
+      return;
+    }
+
+    if (ev.type === "content_block_stop" && state.toolInput[ev.index] !== undefined) {
+      var q = "";
+      try { q = (JSON.parse(state.toolInput[ev.index]) || {}).query || ""; } catch (e) { q = ""; }
+      delete state.toolInput[ev.index];
+      if (q) { onEvent({ t: "query", q: q }); }
+    }
+  }
+
+  function feedLines(chunk, state, onEvent, fail) {
+    state.buf += chunk;
+    var lines = state.buf.split("\n");
+    state.buf = lines.pop();
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      if (line.indexOf("data:") !== 0) { continue; }
+      var payload = line.slice(5).trim();
+      if (!payload || payload === "[DONE]") { continue; }
+      var ev = null;
+      try { ev = JSON.parse(payload); } catch (e) { continue; }
+      handleEvent(ev, state, onEvent, fail);
+    }
+  }
+
+  function readStream(res, state, onEvent) {
+    return new Promise(function (resolve, reject) {
+      var failed = false;
+      function fail(err) { if (!failed) { failed = true; reject(err); } }
+
+      if (!res.body || !res.body.getReader) {
+        res.text().then(function (all) {
+          feedLines(all, state, onEvent, fail);
+          if (!failed) { resolve(state.text); }
+        }, fail);
+        return;
+      }
+
+      var reader = res.body.getReader();
+      var dec = new TextDecoder();
+      function pump() {
+        reader.read().then(function (r) {
+          if (failed) { return; }
+          if (r.done) { resolve(state.text); return; }
+          feedLines(dec.decode(r.value, { stream: true }), state, onEvent, fail);
+          if (!failed) { pump(); }
+        }, fail);
+      }
+      pump();
+    });
+  }
+
+  /* Resolves with the raw assistant text. The caller parses it. */
+  function callClaude(prompt, maxTokens, useSearch, onEvent, estChars) {
+    var report = onEvent || function () {};
+    var body = {
+      model: getModel(),
+      max_tokens: maxTokens,
+      messages: [{ role: "user", content: prompt }]
+    };
+    if (useSearch) {
+      body.tools = [{ type: WEB_SEARCH_TOOL, name: "web_search", max_uses: MAX_SEARCHES }];
+    }
+    if (CAN_STREAM) { body.stream = true; }
+
+    return fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "anthropic-dangerous-direct-browser-access": "true",
+        "x-api-key": getKey(),
+        "anthropic-version": "2023-06-01"
+      },
+      body: JSON.stringify(body)
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.json().then(function (errBody) {
+          var msg = (errBody && errBody.error && errBody.error.message) ||
+            ("The API returned status " + res.status + ".");
+          throw new Error(msg);
+        }, function () {
+          throw new Error("The API returned status " + res.status + ".");
+        });
+      }
+
+      if (!CAN_STREAM) {
+        return res.json().then(function (data) {
+          report({ t: "writing" });
+          return arr(data.content)
+            .filter(function (b) { return b.type === "text"; })
+            .map(function (b) { return b.text; })
+            .join("\n").trim();
+        });
+      }
+
+      var state = { buf: "", text: "", toolInput: {}, est: estChars || SCAN_CHARS };
+      return readStream(res, state, report).then(function (t) { return t.trim(); });
+    });
+  }
+
+  function parseJson(raw) {
+    var s = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+    var first = s.indexOf("{");
+    var last = s.lastIndexOf("}");
+    if (first === -1 || last === -1 || last < first) {
+      throw new Error("Claude replied but not with the structured brief. Run the scan again.");
+    }
+    try { return JSON.parse(s.slice(first, last + 1)); }
+    catch (e) { throw new Error("The brief came back malformed. Run the scan again."); }
+  }
+
+  /* ---------------- prompts ---------------- */
+  function scanPrompt(subject, level) {
+    return "You are a research librarian and methodologist briefing a reader at this level: " + level + ". " +
+      "They want to start original work in this subject area: " + subject + ". " +
+      "Today is " + todayStamp() + ".\n\n" +
+      "TONE AND REGISTER. " + LEVEL_TONE[level] + "\n\n" +
+      LEVEL_ACCESS[level] + "\n\n" +
+      LEVEL_GAPS[level] + "\n\n" +
+      TRACTABILITY_RULE + "\n\n" +
+      "SOURCES. Use the web_search tool at least three times to find what has actually been published recently in this area. " +
+      "Search for recent papers, preprints, reviews, and results. Do not rely on memory for anything in the recent list. " +
+      "Only include a work if you actually retrieved it in a search result, and give its real URL. " +
+      "If you can only verify three works, return three. Never invent a citation, an author, a venue, or a DOI.\n\n" +
+      "PROVENANCE. Grade every item in the recent list honestly. " +
+      '"Peer-reviewed" means it appeared in a refereed journal or a refereed conference proceedings. ' +
+      '"Preprint" means arXiv, bioRxiv, SSRN, PhilPapers, or any server with no referee. ' +
+      '"Secondary coverage" means a news article, a magazine piece, a blog post, or a press release describing work published elsewhere. ' +
+      "If you are not certain a venue is refereed, grade it Preprint or Secondary coverage rather than guessing upward.\n\n" +
+      "NEIGHBORS. Identify fields adjacent to this one that possess a method, instrument, or formalism this field has not adopted. " +
+      "Look at the seams between literatures that do not cite each other. Be specific about the method, not the field.\n\n" +
+      "Respond with ONLY a raw JSON object. No markdown fences, no preamble, no commentary after it. " +
+      "The object must have exactly these keys: " +
+      '"field" (the properly named academic field or subfield, 2 to 6 words), ' +
+      '"state" (three sentences on where this field currently stands and what the live disagreement is), ' +
+      '"frontiers" (array of 3 or 4 objects, each with "title" (short name of the active research front), ' +
+      '"summary" (two sentences on what researchers are doing there), and "why_now" (one sentence on what recently made this front possible or urgent)), ' +
+      '"recent" (array of 3 to 5 objects, each with "title", "authors" (first author plus et al.), ' +
+      '"venue" (journal, conference, or preprint server), "year", ' +
+      '"type" (exactly one of "Peer-reviewed", "Preprint", or "Secondary coverage"), ' +
+      '"finding" (one sentence on what it actually found), and "url" (the real link you retrieved)), ' +
+      '"gaps" (array of 3 or 4 objects, each with "question" (a genuinely open research question stated as a question), ' +
+      '"why_open" (two sentences on why nobody has answered it: what was missing, and what changed), ' +
+      '"tractability" (exactly one of "Accessible", "Ambitious", or "Moonshot")), ' +
+      '"adjacent" (array of exactly 3 objects, each with "field" (the neighboring discipline), ' +
+      '"method" (the specific method, instrument, or formalism it has that this field does not use), and ' +
+      '"transfer" (two sentences on what importing that method would let this field see that it currently cannot)), ' +
+      '"terms" (array of 5 to 7 precise search terms or phrases that surface this literature in a database), ' +
+      '"venues" (array of 3 or 4 strings naming journals or conferences where this work is published and should be submitted).';
+  }
+
+  function planPrompt(field, question, level) {
+    return "You are an experienced research advisor helping a reader at this level: " + level + ". " +
+      "They want to turn an open question into a first research project. " +
+      "Field: " + field + ". The open question is: " + question + ".\n\n" +
+      "TONE AND REGISTER. " + LEVEL_TONE[level] + "\n\n" +
+      "Be concrete and realistic about what this person can actually do given their level. " +
+      "Respond with ONLY a raw JSON object. No markdown fences, no preamble. " +
+      "The object must have exactly these keys: " +
+      '"sharpened" (the question rewritten as one narrow, answerable research question), ' +
+      '"contribution" (two sentences on what a strong result here would contribute and to whom), ' +
+      '"approach" (two sentences naming the methodology and why it fits this question), ' +
+      '"moves" (array of exactly 3 objects, each with "step" (a short imperative title) and ' +
+      '"detail" (two sentences on exactly what to do and what it produces)), ' +
+      '"evidence" (array of 3 strings naming the specific data, sources, corpora, or instruments this needs), ' +
+      '"obstacles" (array of 3 strings, each naming one thing likely to go wrong and how to handle it).';
+  }
+
+  /* ---------------- diffing ---------------- */
+  function markNew(fresh, previous) {
+    if (!previous || !previous.data) { return { recent: 0, gaps: 0 }; }
+
+    var oldPapers = {};
+    arr(previous.data.recent).forEach(function (p) { oldPapers[norm(p.title)] = true; });
+    var oldGaps = {};
+    arr(previous.data.gaps).forEach(function (g) { oldGaps[norm(g.question)] = true; });
+
+    var nRecent = 0, nGaps = 0;
+    arr(fresh.data.recent).forEach(function (p) {
+      if (!oldPapers[norm(p.title)]) { p._new = true; nRecent++; }
+    });
+    arr(fresh.data.gaps).forEach(function (g) {
+      if (!oldGaps[norm(g.question)]) { g._new = true; nGaps++; }
+    });
+    return { recent: nRecent, gaps: nGaps };
+  }
+
+  function deltaLine(scan) {
+    if (!scan.prevStamp) { return ""; }
+    var d = scan.delta || { recent: 0, gaps: 0 };
+    if (!d.recent && !d.gaps) {
+      return '<p class="delta quiet">Nothing new since ' + esc(scan.prevStamp) +
+        ". The same work is still the newest work.</p>";
+    }
+    var bits = [];
+    if (d.recent) { bits.push(d.recent + (d.recent === 1 ? " finding" : " findings")); }
+    if (d.gaps) { bits.push(d.gaps + (d.gaps === 1 ? " question" : " questions")); }
+    return '<p class="delta">' + esc(bits.join(" and ")) + " new since " + esc(scan.prevStamp) +
+      ", marked below.</p>";
+  }
+
+  /* ---------------- rendering ---------------- */
+  var current = null;
+
+  function render(scan) {
+    var d = scan.data;
+    var html = "";
+
+    html += '<p class="eyebrow">Charted</p>';
+    html += '<h2 class="field-name">' + esc(d.field || scan.subject) + "</h2>";
+    html += '<p class="field-state">' + esc(d.state) + "</p>";
+    html += '<p class="scanned">Scanned ' + esc(scan.stamp) + " &middot; Written for: " +
+      esc(levelOf(scan)) + " &middot; " + esc(modelName(scan.model)) + "</p>";
+    html += deltaLine(scan);
+
+    var frontiers = arr(d.frontiers);
+    if (frontiers.length) {
+      html += '<div class="block"><div class="section-head"><h2>Active fronts</h2><span class="count">' +
+        frontiers.length + ' in motion</span></div><div class="cards two">';
+      for (var i = 0; i < frontiers.length; i++) {
+        var f = frontiers[i];
+        html += '<article class="card"><p class="eyebrow">Front ' + (i + 1) + "</p>";
+        html += "<h3>" + esc(f.title) + "</h3><p>" + esc(f.summary) + "</p>";
+        if (f.why_now) { html += '<p class="why-now"><span>Why now</span>' + esc(f.why_now) + "</p>"; }
+        html += "</article>";
+      }
+      html += "</div></div>";
+    }
+
+    var recent = arr(d.recent);
+    if (recent.length) {
+      html += '<div class="block"><div class="section-head"><h2>Just published</h2><span class="count">' +
+        recent.length + " retrieved</span></div>";
+      for (var j = 0; j < recent.length; j++) {
+        var p = recent[j];
+        var u = safeUrl(p.url);
+        html += '<div class="paper"><div class="badges">';
+        html += '<span class="tag ' + provClass(p.type) + '">' + esc(provLabel(p.type)) + "</span>";
+        if (p._new) { html += '<span class="tag fresh">New</span>'; }
+        html += "</div>";
+        html += '<div class="title">' + esc(p.title) + "</div>";
+        html += '<div class="meta">' + esc(p.authors) + " &middot; " + esc(p.venue) +
+          " &middot; " + esc(p.year) + "</div>";
+        html += '<div class="finding">' + esc(p.finding) + "</div>";
+        if (u) {
+          html += '<a class="src" href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' +
+            esc(shortUrl(u)) + "</a>";
+        }
+        html += "</div>";
+      }
+      html += '<p class="caution"><strong>Grades are Claude\'s, not a database\'s.</strong> ' +
+        "A peer-reviewed tag means Claude believes the venue is refereed, and a preprint has been read by nobody but its authors. " +
+        "Open every link and confirm the author, venue, and year before any of it reaches your bibliography. " +
+        "A citation you did not read is not a citation. " +
+        '<button class="linkish" data-guide="prov" type="button">What these grades mean</button></p></div>';
+    }
+
+    html += '<div class="edge-rule"><div class="line"></div><div class="bleed"></div>' +
+      '<div class="label">The edge</div>' +
+      '<div class="sub">Past this line, the field has no answer yet.</div></div>';
+
+    var gaps = arr(d.gaps);
+    if (gaps.length) {
+      html += '<div class="block" style="margin-top:24px;"><div class="section-head"><h2>Open ground</h2><span class="count">' +
+        gaps.length + " unclaimed</span></div>";
+      for (var k = 0; k < gaps.length; k++) {
+        var g = gaps[k];
+        html += '<div class="gap" id="gap-' + k + '"><div class="badges">';
+        html += '<span class="tag ' + tagClass(g.tractability) + '">' +
+          esc(g.tractability || "Accessible") + "</span>";
+        if (g._new) { html += '<span class="tag fresh">New</span>'; }
+        html += "</div>";
+        html += '<p class="q">' + esc(g.question) + "</p>";
+        html += '<p class="why">' + esc(g.why_open) + "</p>";
+        html += '<button class="chart-btn" type="button" data-gap="' + k + '">Chart a course</button>';
+        html += '<div class="plan-slot"></div></div>';
+      }
+      html += '<p class="caution" style="border-left-color:var(--edge);">' +
+        "Accessible, Ambitious, and Moonshot are graded against what a reader at the " + esc(levelOf(scan)) +
+        " level can command, not in the abstract. Change the audience and the same question may be graded differently. " +
+        '<button class="linkish" data-guide="tract" type="button">What these tags mean</button></p>';
+      html += "</div>";
+    }
+
+    var adj = arr(d.adjacent);
+    if (adj.length) {
+      html += '<div class="block"><div class="section-head"><h2>What the neighbors have</h2>' +
+        '<span class="count">Methods worth stealing</span></div>';
+      html += '<p class="field-state" style="margin-bottom:22px;">The most original ground usually sits at the seam ' +
+        "between two literatures that do not read each other. These fields hold instruments this one has not picked up.</p>";
+      html += '<div class="cards two">';
+      for (var a = 0; a < adj.length; a++) {
+        var n = adj[a];
+        html += '<article class="card borrow"><p class="eyebrow">From ' + esc(n.field) + "</p>";
+        html += "<h3>" + esc(n.method) + "</h3>";
+        html += '<p class="transfer"><span>What it would let you see</span>' + esc(n.transfer) + "</p>";
+        html += "</article>";
+      }
+      html += "</div></div>";
+    }
+
+    var terms = arr(d.terms);
+    var venues = arr(d.venues);
+    if (terms.length || venues.length) {
+      html += '<div class="block"><div class="section-head"><h2>What to search, where to publish</h2></div>';
+      html += '<div class="toolbox">';
+      if (terms.length) {
+        html += '<div><p class="k">Database search terms</p><div class="chips">';
+        for (var t = 0; t < terms.length; t++) { html += '<span class="chip">' + esc(terms[t]) + "</span>"; }
+        html += "</div></div>";
+      }
+      if (venues.length) {
+        html += '<div><p class="k">Journals and conferences</p><ul class="venues">';
+        for (var v = 0; v < venues.length; v++) { html += "<li>" + esc(venues[v]) + "</li>"; }
+        html += "</ul></div>";
+      }
+      html += "</div></div>";
+    }
+
+    html += '<div class="actions">';
+    html += '<button class="ghost-btn" id="copyBtn" type="button">Copy the brief</button>';
+    html += '<button class="ghost-btn" id="deckBtn" type="button">Copy slide outline</button>';
+    html += '<button class="ghost-btn rescan" id="rescanBtn" type="button">Re-scan for new work</button>';
+    html += '<button class="ghost-btn" id="newBtn" type="button">Scan another subject</button>';
+    html += "</div>";
+
+    resultsEl.innerHTML = html;
+    resultsEl.hidden = false;
+
+    for (var pi = 0; pi < gaps.length; pi++) {
+      var saved = scan.plans && scan.plans[norm(gaps[pi].question)];
+      if (saved) { paintPlan(pi, saved); }
+    }
+
+    document.getElementById("copyBtn").addEventListener("click", function () {
+      copyText(buildMarkdown(current), "Brief copied");
+    });
+    document.getElementById("deckBtn").addEventListener("click", function () {
+      copyText(buildDeck(current), "Slide outline copied");
+    });
+    document.getElementById("rescanBtn").addEventListener("click", function () {
+      runScan(current.subject, current);
+    });
+    document.getElementById("newBtn").addEventListener("click", function () {
+      resultsEl.hidden = true;
+      resultsEl.innerHTML = "";
+      subjectEl.value = "";
+      current = null;
+      subjectEl.focus();
+      window.scrollTo(0, 0);
+    });
+  }
+
+  function paintPlan(idx, plan) {
+    var gapEl = document.getElementById("gap-" + idx);
+    if (!gapEl) { return; }
+    var slot = gapEl.querySelector(".plan-slot");
+    var btn = gapEl.querySelector(".chart-btn");
+    if (btn && btn.parentNode) { btn.parentNode.removeChild(btn); }
+
+    var html = '<div class="plan"><h4>The question, sharpened</h4>';
+    html += '<p class="sharp">' + esc(plan.sharpened) + "</p>";
+    html += "<h4>What a strong result contributes</h4><p>" + esc(plan.contribution) + "</p>";
+    html += "<h4>Approach</h4><p>" + esc(plan.approach) + "</p>";
+
+    var moves = arr(plan.moves);
+    if (moves.length) {
+      html += "<h4>First three moves</h4><ol>";
+      for (var i = 0; i < moves.length; i++) {
+        html += "<li><strong>" + esc(moves[i].step) + ".</strong> " + esc(moves[i].detail) + "</li>";
+      }
+      html += "</ol>";
+    }
+    var ev = arr(plan.evidence);
+    if (ev.length) {
+      html += "<h4>What you will need</h4><ul>";
+      for (var j = 0; j < ev.length; j++) { html += "<li>" + esc(ev[j]) + "</li>"; }
+      html += "</ul>";
+    }
+    var ob = arr(plan.obstacles);
+    if (ob.length) {
+      html += "<h4>Where it goes wrong</h4><ul>";
+      for (var k = 0; k < ob.length; k++) { html += "<li>" + esc(ob[k]) + "</li>"; }
+      html += "</ul>";
+    }
+    html += "</div>";
+    slot.innerHTML = html;
+  }
+
+  /* ---------------- actions ---------------- */
+  function onChartClick(e) {
+    var g = e.target.closest ? e.target.closest("[data-guide]") : null;
+    if (g) { openGuide(); return; }
+    var btn = e.target.closest ? e.target.closest(".chart-btn") : null;
+    if (!btn || !current) { return; }
+    var idx = parseInt(btn.getAttribute("data-gap"), 10);
+    var gap = arr(current.data.gaps)[idx];
+    if (!gap) { return; }
+
+    btn.disabled = true;
+    btn.textContent = "Charting...";
+
+    var slot = document.getElementById("gap-" + idx).querySelector(".plan-slot");
+    slot.innerHTML = '<div class="mini-bar"><div class="fill" id="miniFill-' + idx + '"></div></div>';
+    var miniPct = 0;
+    function mini(pct) {
+      if (pct <= miniPct) { return; }
+      miniPct = Math.min(100, pct);
+      var f = document.getElementById("miniFill-" + idx);
+      if (f) { f.style.width = miniPct + "%"; }
+    }
+    mini(8);
+
+    callClaude(planPrompt(current.data.field || current.subject, gap.question, levelOf(current)), 2000, false,
+      function (ev) {
+        if (ev.t === "writing") { mini(15); }
+        else if (ev.t === "text") { mini(15 + 80 * Math.min(1, ev.len / PLAN_CHARS)); }
+      }, PLAN_CHARS)
+      .then(function (raw) {
+        mini(100);
+        var plan = parseJson(raw);
+        current.plans = current.plans || {};
+        current.plans[norm(gap.question)] = plan;
+        rememberScan(current);
+        paintPlan(idx, plan);
+      })
+      .catch(function (err) {
+        slot.innerHTML = "";
+        btn.disabled = false;
+        btn.textContent = "Chart a course";
+        showError(err.message || "Something went wrong charting that question.");
+      });
+  }
+  resultsEl.addEventListener("click", onChartClick);
+
+  function runScan(forcedSubject, previous) {
+    var subject = forcedSubject || subjectEl.value.trim();
+    if (!subject) { subjectEl.focus(); toast("Name a subject first"); return; }
+    if (!getKey()) { openSettings(); return; }
+
+    var level = getLevel();
+    var rescanBtn = document.getElementById("rescanBtn");
+    if (rescanBtn) { rescanBtn.disabled = true; rescanBtn.textContent = "Re-scanning..."; }
+    scanBtn.disabled = true;
+    scanBtn.textContent = "Scanning";
+    if (!previous) { resultsEl.hidden = true; resultsEl.innerHTML = ""; }
+
+    stopTimers();
+    var prog = new Progress(CAN_STREAM);
+    prog.mount();
+    if (!CAN_STREAM) { rotateStatus(); }
+
+    callClaude(scanPrompt(subject, level), 6000, true, function (ev) { prog.event(ev); }, SCAN_CHARS)
+      .then(function (raw) {
+        prog.finish();
+        var data = parseJson(raw);
+        clearStatus();
+        scanBtn.disabled = false;
+        scanBtn.textContent = "Scan the frontier";
+
+        var scan = {
+          subject: subject,
+          level: level,
+          model: getModel(),
+          stamp: todayStamp(),
+          ts: Date.now(),
+          data: data,
+          plans: (previous && previous.plans) || {}
+        };
+        if (previous) {
+          scan.delta = markNew(scan, previous);
+          scan.prevStamp = previous.stamp;
+        }
+        current = scan;
+        rememberScan(scan);
+        paintWatch();
+        render(scan);
+        var r = resultsEl.getBoundingClientRect();
+        window.scrollTo(0, window.pageYOffset + r.top - 20);
+      })
+      .catch(function (err) {
+        scanBtn.disabled = false;
+        scanBtn.textContent = "Scan the frontier";
+        var rb = document.getElementById("rescanBtn");
+        if (rb) { rb.disabled = false; rb.textContent = "Re-scan for new work"; }
+        var m = err.message || "Something went wrong.";
+        if (m.toLowerCase().indexOf("authentication") > -1 || m.indexOf("401") > -1) {
+          m = "That API key was rejected. Open settings and paste it again.";
+        }
+        showError(m);
+      });
+  }
+
+  scanBtn.addEventListener("click", function () { runScan(null, null); });
+  subjectEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { runScan(null, null); }
+  });
+
+  /* ---------------- markdown brief ---------------- */
+  function buildMarkdown(scan) {
+    var d = scan.data;
+    var out = [];
+    out.push("# " + (d.field || scan.subject));
+    out.push("");
+    out.push("Frontier brief from Bleeding Edge, scanned " + scan.stamp + ". Audience: " +
+      levelOf(scan) + ". Model: " + modelName(scan.model) + ".");
+    out.push("Every citation below is unverified. Confirm each one before use.");
+    out.push("");
+    out.push("## Where the field stands");
+    out.push(d.state || "");
+    out.push("");
+
+    var fr = arr(d.frontiers);
+    if (fr.length) {
+      out.push("## Active fronts");
+      for (var i = 0; i < fr.length; i++) {
+        out.push("### " + fr[i].title);
+        out.push(fr[i].summary || "");
+        if (fr[i].why_now) { out.push("Why now: " + fr[i].why_now); }
+        out.push("");
+      }
+    }
+
+    var re = arr(d.recent);
+    if (re.length) {
+      out.push("## Recent work");
+      for (var j = 0; j < re.length; j++) {
+        var p = re[j];
+        out.push((j + 1) + ". [" + provLabel(p.type) + "] " + p.title + ". " + p.authors +
+          ". " + p.venue + ", " + p.year + ".");
+        out.push("   " + (p.finding || ""));
+        if (safeUrl(p.url)) { out.push("   " + p.url); }
+      }
+      out.push("");
+    }
+
+    var gp = arr(d.gaps);
+    if (gp.length) {
+      out.push("## Open ground");
+      for (var k = 0; k < gp.length; k++) {
+        out.push("### " + gp[k].question + "  [" + (gp[k].tractability || "") + "]");
+        out.push(gp[k].why_open || "");
+        var pl = scan.plans && scan.plans[norm(gp[k].question)];
+        if (pl) {
+          out.push("");
+          out.push("**Sharpened question.** " + (pl.sharpened || ""));
+          out.push("**Contribution.** " + (pl.contribution || ""));
+          out.push("**Approach.** " + (pl.approach || ""));
+          var mv = arr(pl.moves);
+          if (mv.length) {
+            out.push("**First three moves.**");
+            for (var m = 0; m < mv.length; m++) {
+              out.push((m + 1) + ". " + mv[m].step + ". " + mv[m].detail);
+            }
+          }
+          var ev = arr(pl.evidence);
+          if (ev.length) { out.push("**What you will need.** " + ev.join(" / ")); }
+          var ob = arr(pl.obstacles);
+          if (ob.length) { out.push("**Where it goes wrong.** " + ob.join(" / ")); }
+        }
+        out.push("");
+      }
+    }
+
+    var ad = arr(d.adjacent);
+    if (ad.length) {
+      out.push("## Methods worth borrowing");
+      for (var n = 0; n < ad.length; n++) {
+        out.push("### " + ad[n].method + " (from " + ad[n].field + ")");
+        out.push(ad[n].transfer || "");
+        out.push("");
+      }
+    }
+
+    var tm = arr(d.terms);
+    if (tm.length) { out.push("## Search terms"); out.push(tm.join(", ")); out.push(""); }
+    var vn = arr(d.venues);
+    if (vn.length) { out.push("## Venues"); out.push(vn.join(", ")); out.push(""); }
+
+    out.push("Generated by Bleeding Edge, AppADay 063, using " + modelName(scan.model) + ".");
+    return out.join("\n");
+  }
+
+  /* ---------------- slide outline ---------------- */
+  function sentences(text) {
+    var m = String(text || "").match(/[^.?!]+[.?!]*/g) || [];
+    return m.map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 1; });
+  }
+
+  function buildDeck(scan) {
+    var d = scan.data;
+    var field = d.field || scan.subject;
+    var out = [];
+    var n = 0;
+
+    function slide(title) { n++; out.push(""); out.push("## Slide " + n + ". " + title); }
+    function bullet(t) { if (t) { out.push("- " + t); } }
+    function notes(t) { if (t) { out.push(""); out.push("Notes: " + t); } }
+
+    out.push("# " + field);
+    out.push("Slide outline generated by Bleeding Edge on " + scan.stamp + ". Audience: " +
+      levelOf(scan) + ".");
+    out.push("Confirm every citation before presenting it.");
+
+    slide("Title");
+    bullet(field);
+    bullet("Where the work has reached, and where it has not");
+    notes("Open by naming the question you want the audience to care about, not the field.");
+
+    slide("Where the field stands");
+    sentences(d.state).forEach(bullet);
+    notes("This is the shared ground. Move through it quickly.");
+
+    arr(d.frontiers).forEach(function (f) {
+      slide("Active front: " + f.title);
+      sentences(f.summary).forEach(bullet);
+      if (f.why_now) { bullet("Why now: " + f.why_now); }
+      notes("One front per slide. Do not merge them.");
+    });
+
+    var re = arr(d.recent);
+    if (re.length) {
+      slide("What was just published");
+      re.forEach(function (p) {
+        bullet(p.authors + " (" + p.year + "), " + p.venue + " [" + provLabel(p.type) + "]: " + p.finding);
+      });
+      notes("Say the provenance out loud. A preprint and a refereed paper do not carry the same weight.");
+    }
+
+    slide("The edge");
+    bullet("Past this line, the field has no answer yet.");
+    notes("Pause here. This is the hinge of the talk.");
+
+    arr(d.gaps).forEach(function (g) {
+      slide("Open question [" + (g.tractability || "") + "]");
+      bullet(g.question);
+      sentences(g.why_open).forEach(bullet);
+      var pl = scan.plans && scan.plans[norm(g.question)];
+      if (pl) {
+        slide("A first project: " + (pl.sharpened || g.question));
+        bullet("Contribution: " + (pl.contribution || ""));
+        bullet("Approach: " + (pl.approach || ""));
+        slide("First three moves");
+        arr(pl.moves).forEach(function (m, i) { bullet((i + 1) + ". " + m.step + ": " + m.detail); });
+        notes("Land on the first move. It should sound like something you could start on Monday.");
+        slide("What could go wrong");
+        arr(pl.obstacles).forEach(bullet);
+        notes("Naming the obstacles first is what separates a proposal from a wish.");
+      }
+    });
+
+    var ad = arr(d.adjacent);
+    if (ad.length) {
+      slide("Methods worth borrowing");
+      ad.forEach(function (a) { bullet(a.method + " (from " + a.field + "): " + a.transfer); });
+      notes("The seam between two literatures is where the original work usually is.");
+    }
+
+    var vn = arr(d.venues);
+    if (vn.length) {
+      slide("Where this work lives");
+      vn.forEach(bullet);
+      notes("Name the venue you would submit to. It signals you know the field's standards.");
+    }
+
+    slide("What I would do first");
+    bullet("Pick one question. Narrow it until it is answerable.");
+    bullet("Read the three papers on the previous slides in full.");
+    bullet("Write the methods section before collecting anything.");
+    notes("Close on the single next action, not a summary.");
+
+    out.push("");
+    out.push("Generated by Bleeding Edge, AppADay 063, using " + modelName(scan.model) + ".");
+    return out.join("\n");
+  }
+
+  /* ---------------- settings ---------------- */
+  function openSettings() {
+    if (document.getElementById("settingsOverlay")) { return; }
+
+    var overlay = document.createElement("div");
+    overlay.className = "overlay";
+    overlay.id = "settingsOverlay";
+    var chosen = getModel();
+    var modelHtml = "";
+    for (var i = 0; i < MODELS.length; i++) {
+      var m = MODELS[i];
+      modelHtml += '<button class="model-opt" type="button" data-model="' + esc(m.id) + '" aria-pressed="' +
+        (m.id === chosen ? "true" : "false") + '">' +
+        '<span class="m-head"><span class="m-name">' + esc(m.name) + "</span>" +
+        '<span class="m-cost">' + esc(m.cost) + "</span></span>" +
+        '<span class="m-note">' + esc(m.note) + "</span></button>";
+    }
+
+    overlay.innerHTML =
+      '<div class="modal wide" role="dialog" aria-modal="true" aria-label="Settings">' +
+        "<h3>Settings</h3>" +
+        '<p class="sub">Bleeding Edge runs on your own Anthropic API key and uses Claude with web search turned on.</p>' +
+        '<label for="apiKeyInput">Anthropic API key</label>' +
+        '<input type="password" id="apiKeyInput" autocomplete="off" spellcheck="false" placeholder="sk-ant-...">' +
+        '<span class="help-text">Stored only in this browser, never sent anywhere but Anthropic. ' +
+        'Get a key at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>.</span>' +
+        '<p class="guide-h" style="margin-top:26px;">Model</p>' +
+        '<div class="model-list" id="modelList" role="group" aria-label="Model">' + modelHtml + "</div>" +
+        '<span class="help-text">A scan spends tokens on both the reading and the writing, and the web searches ' +
+        "are billed on top at ten dollars per thousand. Expect somewhere between a few cents and a couple of dimes per scan. " +
+        "Changing the model takes effect on the next scan.</span>" +
+        '<div class="modal-actions">' +
+          '<button class="btn-close" id="closeSettings" type="button">Close</button>' +
+          '<button class="btn-save" id="saveSettings" type="button">Save key</button>' +
+        "</div></div>";
+
+    document.body.appendChild(overlay);
+
+    var input = document.getElementById("apiKeyInput");
+    input.value = getKey();
+    input.focus();
+
+    document.getElementById("modelList").addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest("[data-model]") : null;
+      if (!b) { return; }
+      lsSet(LS.model, b.getAttribute("data-model"));
+      var opts = document.getElementById("modelList").querySelectorAll(".model-opt");
+      for (var j = 0; j < opts.length; j++) {
+        opts[j].setAttribute("aria-pressed", opts[j] === b ? "true" : "false");
+      }
+      paintKeyNote();
+    });
+
+    document.getElementById("saveSettings").addEventListener("click", function () {
+      var v = input.value.trim();
+      if (v) { lsSet(LS.apikey, v); } else { lsDel(LS.apikey); }
+      paintKeyNote();
+      closeSettings();
+      toast(v ? "Key saved" : "Key cleared");
+    });
+    document.getElementById("closeSettings").addEventListener("click", closeSettings);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) { closeSettings(); }
+    });
+    document.addEventListener("keydown", escClose);
+  }
+  function escClose(e) { if (e.key === "Escape") { closeSettings(); } }
+  function closeSettings() {
+    var ids = ["settingsOverlay", "guideOverlay"];
+    for (var i = 0; i < ids.length; i++) {
+      var o = document.getElementById(ids[i]);
+      if (o && o.parentNode) { o.parentNode.removeChild(o); }
+    }
+    document.removeEventListener("keydown", escClose);
+  }
+  gearBtn.addEventListener("click", openSettings);
+
+  /* ---------------- guide ---------------- */
+  var LEVEL_ROWS = [
+    ["hs", "High School", "Every term defined, every acronym unpacked, concrete examples over abstractions. Sources are restricted to work you can actually open without a university login, and the open questions are ones a determined student could make real progress on in a semester."],
+    ["ug", "Undergraduate", "Terms defined on first use, an introductory course assumed and nothing more. Paywalled journal articles are fair game, since you have a library proxy."],
+    ["gr", "Graduate", "A brief orientation, then specifics. Schools of thought are named rather than explained, and standard reference works are cited by name."],
+    ["rs", "Researcher", "No fundamentals. The brief argues: it names the live disagreement, says which side the evidence favors, and says why. Then it judges the field as an institution, naming which lines of work are overfunded relative to their yield and where the field is fooling itself."]
+  ];
+
+  var PROV_ROWS = [
+    ["peer", "Peer-reviewed", "A refereed journal or refereed conference proceedings. Other researchers read it before you did."],
+    ["preprint", "Preprint", "arXiv, bioRxiv, SSRN, PhilPapers, or any server with no referee between the author and you. It may be excellent. Nobody has checked."],
+    ["secondary", "Secondary coverage", "A news article, magazine piece, or press release describing work published elsewhere. Cite the study, never the story about the study."]
+  ];
+
+  var TRACT_ROWS = [
+    ["accessible", "Accessible", "Within reach of the reader this brief was written for, using what they already have."],
+    ["ambitious", "Ambitious", "A real stretch beyond that reader, but not beyond the field."],
+    ["moonshot", "Moonshot", "The instrument or the theory does not exist yet, for anyone."]
+  ];
+
+  function guideRows(rows) {
+    var h = "";
+    for (var i = 0; i < rows.length; i++) {
+      h += '<div class="guide-row"><div class="name ' + rows[i][0] + '">' + esc(rows[i][1]) +
+        "</div><p>" + esc(rows[i][2]) + "</p></div>";
+    }
+    return h;
+  }
+
+  function openGuide() {
+    if (document.getElementById("guideOverlay")) { return; }
+    var overlay = document.createElement("div");
+    overlay.className = "overlay";
+    overlay.id = "guideOverlay";
+    overlay.innerHTML =
+      '<div class="modal wide" role="dialog" aria-modal="true" aria-label="How to read this brief">' +
+        "<h3>How to read this</h3>" +
+        '<p class="sub">Three things on the page are labeled. Here is what the labels mean.</p>' +
+        '<p class="guide-h">Who the brief is written for</p>' +
+        guideRows(LEVEL_ROWS) +
+        '<p class="guide-h">How published work is graded</p>' +
+        guideRows(PROV_ROWS) +
+        '<p class="guide-note">Claude assigns these grades from what it can see of the venue. It is told to grade down when unsure. ' +
+        "Confirm the venue yourself before you cite anything.</p>" +
+        '<p class="guide-h">How open questions are graded</p>' +
+        guideRows(TRACT_ROWS) +
+        '<p class="guide-note">These are relative to the audience you chose, not absolute. The same question can be Accessible ' +
+        "to a researcher with a lab and a Moonshot to a high school student with a laptop, and it is labeled honestly for whoever is reading.</p>" +
+        '<div class="modal-actions">' +
+          '<button class="btn-save" id="closeGuide" type="button">Close</button>' +
+        "</div></div>";
+    document.body.appendChild(overlay);
+    document.getElementById("closeGuide").addEventListener("click", closeSettings);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) { closeSettings(); }
+    });
+    document.addEventListener("keydown", escClose);
+    document.getElementById("closeGuide").focus();
+  }
+
+  document.getElementById("guideBtn").addEventListener("click", openGuide);
+
+  /* ---------------- boot ---------------- */
+  paintLevels();
+  paintKeyNote();
+  paintWatch();
+})();
+</script>
+</body>
+</html>
