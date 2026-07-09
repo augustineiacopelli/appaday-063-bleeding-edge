@@ -46,6 +46,8 @@ Every item in the recent-work list carries a grade. **Peer-reviewed** means a re
 
 This exists because students routinely cite a preprint and a *Nature* paper as though they carry the same authority. Displaying the distinction on the card, in a different color, next to the finding itself, teaches it without a lecture. For the high school audience the grading matters twice over, since the sources it can reach skew toward preprints and press releases precisely because those are the ones that are free.
 
+There is a fourth state the guide names: **Ungraded**, shown with a dashed amber border. It appears when Claude returned no grade or one that could not be read. Nothing defaults to peer-reviewed, because a badge that a record did not earn is worse than an honest blank. A recovered record missing its grade entirely is dropped from the page rather than shown.
+
 The grades are Claude's judgment, not a database lookup, and the app says so on the page. Every link is displayed in full and every brief carries the same instruction: open the source, confirm the author, venue, and year, and read the paper before it reaches your bibliography. A citation you did not read is not a citation.
 
 ## What the neighbors have
@@ -79,6 +81,14 @@ A scan takes about a minute, which is long enough that a spinner becomes a lie. 
 Each search Claude issues appears in the panel as it is issued, showing the literal query text. The bar advances as results come back, giving the search phase the first forty percent of the run. When the first token of the brief arrives the phase changes to composing, and the bar fills against the expected length of the payload, capping at ninety-six percent so it never claims to be finished before it is. A clock counts up beside it. Nothing on that panel is invented: the queries are Claude's own, and the bar only moves when an event arrives.
 
 The pacing constants are estimates, and the last stretch of the writing phase can crawl if the brief runs long. That is the honest failure mode of a determinate bar against an unknown output length, and it is preferable to a spinner that conveys nothing. Browsers without `ReadableStream` fall back to a non-streaming request and a rotating status line.
+
+## When the brief is cut off
+
+Sonnet 5 and Opus 4.8 spend part of the output budget thinking before they write, so the token ceiling has to sit well above the size of the brief. It is set at 16,000 for a scan and 4,000 for a charted course.
+
+If a brief is cut off anyway, the app does not throw away a minute of searching. It walks the fragment backwards to the last complete value, closes whatever brackets are still open, and rebuilds what arrived. Half-written records are then dropped rather than rendered, because a paper missing its provenance grade would otherwise be displayed as though it had one. A banner at the top of a recovered brief says plainly that it is a fragment and that later sections may be missing.
+
+When even that fails, the error panel reports whether the response hit the output ceiling and offers to show the raw text that came back, so a failure is diagnosable rather than merely annoying.
 
 ## Running it
 
