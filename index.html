@@ -303,6 +303,22 @@
   @keyframes sweep { 0% { opacity: 0.25; } 50% { opacity: 1; } 100% { opacity: 0.25; } }
   .status .pulse { animation: sweep 1.4s ease-in-out infinite; }
 
+  .raw-peek {
+    margin: 12px 0 0;
+    max-height: 200px;
+    overflow: auto;
+    background: var(--void);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 10px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--dim);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
   .prog-top {
     display: flex;
     align-items: baseline;
@@ -528,6 +544,7 @@
   .tag.ambitious, .tag.preprint { color: var(--moon); }
   .tag.moonshot { color: var(--edge); }
   .tag.secondary { color: var(--dimmer); }
+  .tag.ungraded { color: var(--moon); border-style: dashed; }
   .tag.fresh { color: var(--void); background: var(--verified); border-color: var(--verified); font-weight: 600; }
 
   .caution {
@@ -738,6 +755,7 @@
   .guide-row .name.peer, .guide-row .name.accessible { color: var(--verified); }
   .guide-row .name.preprint, .guide-row .name.ambitious { color: var(--moon); }
   .guide-row .name.secondary { color: var(--dimmer); }
+  .guide-row .name.ungraded { color: var(--moon); }
   .guide-row .name.moonshot { color: var(--edge); }
   .guide-row p { margin: 0; font-size: 14px; color: var(--dim); line-height: 1.5; }
   .guide-note { margin: 18px 0 0; font-size: 13px; color: var(--dimmer); }
@@ -853,6 +871,11 @@
   var WEB_SEARCH_TOOL = "web_search_20250305";
   var MAX_SEARCHES = 6;
   var MAX_WATCHED = 12;
+
+  /* Output ceilings. Sonnet 5 and Opus 4.8 spend part of this budget on thinking
+     before any of the brief is written, so these sit well above the payload size. */
+  var SCAN_TOKENS = 16000;
+  var PLAN_TOKENS = 4000;
 
   /* rough character counts of a finished payload, used to pace the bar */
   var SCAN_CHARS = 4200;
@@ -1064,16 +1087,19 @@
     return "accessible";
   }
   function provClass(t) {
-    var s = String(t || "").toLowerCase();
+    var s = String(t == null ? "" : t).toLowerCase().trim();
+    if (!s) { return "ungraded"; }
     if (s.indexOf("preprint") > -1) { return "preprint"; }
     if (s.indexOf("secondary") > -1 || s.indexOf("coverage") > -1 || s.indexOf("news") > -1) { return "secondary"; }
-    return "peer";
+    if (s.indexOf("peer") > -1 || s.indexOf("refereed") > -1) { return "peer"; }
+    return "ungraded";
   }
   function provLabel(t) {
     var c = provClass(t);
     if (c === "preprint") { return "Preprint"; }
     if (c === "secondary") { return "Secondary coverage"; }
-    return "Peer-reviewed";
+    if (c === "peer") { return "Peer-reviewed"; }
+    return "Ungraded";
   }
 
   function toast(msg) {
@@ -1310,7 +1336,24 @@
     stopTimers();
     statusEl.hidden = false;
     statusEl.className = "status err";
-    statusEl.innerHTML = "<strong>Scan stopped.</strong> " + esc(msg);
+    statusEl.innerHTML = "<strong>Scan stopped.</strong> " + esc(msg) +
+      (lastRaw ? ' <button class="linkish" id="peekBtn" type="button">Show what came back</button>' +
+        '<pre class="raw-peek" id="rawPeek" hidden></pre>' : "");
+    var pb = document.getElementById("peekBtn");
+    if (pb) {
+      pb.addEventListener("click", function () {
+        var pre = document.getElementById("rawPeek");
+        if (!pre) { return; }
+        if (pre.hidden) {
+          pre.textContent = lastRaw.slice(0, 2000) + (lastRaw.length > 2000 ? "\n\n[truncated for display]" : "");
+          pre.hidden = false;
+          pb.textContent = "Hide";
+        } else {
+          pre.hidden = true;
+          pb.textContent = "Show what came back";
+        }
+      });
+    }
   }
   function clearStatus() {
     stopTimers();
@@ -1355,6 +1398,11 @@
       return;
     }
 
+    if (ev.type === "message_delta") {
+      if (ev.delta && ev.delta.stop_reason) { state.stop = ev.delta.stop_reason; }
+      return;
+    }
+
     if (ev.type === "content_block_stop" && state.toolInput[ev.index] !== undefined) {
       var q = "";
       try { q = (JSON.parse(state.toolInput[ev.index]) || {}).query || ""; } catch (e) { q = ""; }
@@ -1386,7 +1434,7 @@
       if (!res.body || !res.body.getReader) {
         res.text().then(function (all) {
           feedLines(all, state, onEvent, fail);
-          if (!failed) { resolve(state.text); }
+          if (!failed) { resolve(state); }
         }, fail);
         return;
       }
@@ -1396,7 +1444,7 @@
       function pump() {
         reader.read().then(function (r) {
           if (failed) { return; }
-          if (r.done) { resolve(state.text); return; }
+          if (r.done) { resolve(state); return; }
           feedLines(dec.decode(r.value, { stream: true }), state, onEvent, fail);
           if (!failed) { pump(); }
         }, fail);
@@ -1441,27 +1489,122 @@
       if (!CAN_STREAM) {
         return res.json().then(function (data) {
           report({ t: "writing" });
-          return arr(data.content)
+          var t = arr(data.content)
             .filter(function (b) { return b.type === "text"; })
             .map(function (b) { return b.text; })
             .join("\n").trim();
+          return { text: t, stop: data.stop_reason || "" };
         });
       }
 
-      var state = { buf: "", text: "", toolInput: {}, est: estChars || SCAN_CHARS };
-      return readStream(res, state, report).then(function (t) { return t.trim(); });
+      var state = { buf: "", text: "", toolInput: {}, stop: "", est: estChars || SCAN_CHARS };
+      return readStream(res, state, report).then(function (s) {
+        return { text: s.text.trim(), stop: s.stop };
+      });
     });
   }
 
-  function parseJson(raw) {
+  var lastRaw = "";
+
+  /* Walks a JSON fragment and appends whatever brackets are still open.
+     Returns null if the fragment ends inside a string literal. */
+  function closeJson(fragment) {
+    var stack = [], inStr = false, esc = false;
+    for (var i = 0; i < fragment.length; i++) {
+      var ch = fragment.charAt(i);
+      if (inStr) {
+        if (esc) { esc = false; }
+        else if (ch === "\\") { esc = true; }
+        else if (ch === '"') { inStr = false; }
+        continue;
+      }
+      if (ch === '"') { inStr = true; }
+      else if (ch === "{" || ch === "[") { stack.push(ch); }
+      else if (ch === "}" || ch === "]") { stack.pop(); }
+    }
+    if (inStr || !stack.length) { return null; }
+    var out = fragment.replace(/,\s*$/, "");
+    for (var j = stack.length - 1; j >= 0; j--) {
+      out += (stack[j] === "{") ? "}" : "]";
+    }
+    return out;
+  }
+
+  /* Trims back to the last complete value, then closes the structure.
+     Recovers a cut-off brief instead of throwing an hour of searching away. */
+  function repairJson(s) {
+    var floor = Math.floor(s.length * 0.35);
+    var tries = 0;
+    for (var cut = s.length; cut > floor && tries < 500; cut--) {
+      var c = s.charAt(cut - 1);
+      var endsValue = (c === "}" || c === "]" || c === '"' || c === "e" || c === "l" ||
+        (c >= "0" && c <= "9"));
+      if (!endsValue) { continue; }
+      var closed = closeJson(s.slice(0, cut));
+      if (!closed) { continue; }
+      tries++;
+      try { return JSON.parse(closed); } catch (e) { /* keep trimming */ }
+    }
+    return null;
+  }
+
+  /* A repaired fragment can end mid-record. A paper with no finding and no grade
+     must never reach the page, because an ungraded record would otherwise inherit
+     a default label it did not earn. */
+  function complete(obj, keys) {
+    if (!obj || typeof obj !== "object") { return false; }
+    for (var i = 0; i < keys.length; i++) {
+      var v = obj[keys[i]];
+      if (v == null || String(v).trim() === "") { return false; }
+    }
+    return true;
+  }
+
+  function pruneRecords(data) {
+    if (!data || typeof data !== "object") { return data; }
+    var spec = {
+      frontiers: ["title", "summary"],
+      recent: ["title", "authors", "venue", "year", "type", "finding"],
+      gaps: ["question", "why_open", "tractability"],
+      adjacent: ["field", "method", "transfer"]
+    };
+    for (var k in spec) {
+      if (!Object.prototype.hasOwnProperty.call(spec, k)) { continue; }
+      if (!arr(data[k]).length) { continue; }
+      var keep = [];
+      var list = arr(data[k]);
+      for (var i = 0; i < list.length; i++) {
+        if (complete(list[i], spec[k])) { keep.push(list[i]); }
+      }
+      data[k] = keep;
+    }
+    data.terms = arr(data.terms).filter(function (t) { return t && String(t).trim(); });
+    data.venues = arr(data.venues).filter(function (v) { return v && String(v).trim(); });
+    return data;
+  }
+
+  /* Returns { data, truncated }. */
+  function parseJson(res) {
+    var raw = (res && res.text) || "";
+    lastRaw = raw;
     var s = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
     var first = s.indexOf("{");
-    var last = s.lastIndexOf("}");
-    if (first === -1 || last === -1 || last < first) {
-      throw new Error("Claude replied but not with the structured brief. Run the scan again.");
+    if (first === -1) {
+      throw new Error("Claude answered in prose rather than the structured brief. Run the scan again.");
     }
-    try { return JSON.parse(s.slice(first, last + 1)); }
-    catch (e) { throw new Error("The brief came back malformed. Run the scan again."); }
+    var body = s.slice(first);
+    var last = body.lastIndexOf("}");
+    if (last > -1) {
+      try { return { data: pruneRecords(JSON.parse(body.slice(0, last + 1))), truncated: false }; }
+      catch (e) { /* fall through to repair */ }
+    }
+    var repaired = repairJson(body);
+    if (repaired) { return { data: pruneRecords(repaired), truncated: true }; }
+    if (res && res.stop === "max_tokens") {
+      throw new Error("The brief hit the output ceiling and was cut off too early to recover. " +
+        "Try a narrower subject.");
+    }
+    throw new Error("The brief came back malformed and could not be repaired. Run the scan again.");
   }
 
   /* ---------------- prompts ---------------- */
@@ -1566,6 +1709,11 @@
     html += '<p class="field-state">' + esc(d.state) + "</p>";
     html += '<p class="scanned">Scanned ' + esc(scan.stamp) + " &middot; Written for: " +
       esc(levelOf(scan)) + " &middot; " + esc(modelName(scan.model)) + "</p>";
+    if (scan.truncated) {
+      html += '<p class="caution" style="border-left-color:var(--moon);">Claude ran out of room mid-brief. ' +
+        "This was rebuilt from the fragment that arrived, so later sections may be short or missing entirely. " +
+        "Re-scan for a complete one.</p>";
+    }
     html += deltaLine(scan);
 
     var frontiers = arr(d.frontiers);
@@ -1766,14 +1914,14 @@
     }
     mini(8);
 
-    callClaude(planPrompt(current.data.field || current.subject, gap.question, levelOf(current)), 2000, false,
+    callClaude(planPrompt(current.data.field || current.subject, gap.question, levelOf(current)), PLAN_TOKENS, false,
       function (ev) {
         if (ev.t === "writing") { mini(15); }
         else if (ev.t === "text") { mini(15 + 80 * Math.min(1, ev.len / PLAN_CHARS)); }
       }, PLAN_CHARS)
-      .then(function (raw) {
+      .then(function (res) {
         mini(100);
-        var plan = parseJson(raw);
+        var plan = parseJson(res).data;
         current.plans = current.plans || {};
         current.plans[norm(gap.question)] = plan;
         rememberScan(current);
@@ -1805,10 +1953,11 @@
     prog.mount();
     if (!CAN_STREAM) { rotateStatus(); }
 
-    callClaude(scanPrompt(subject, level), 6000, true, function (ev) { prog.event(ev); }, SCAN_CHARS)
-      .then(function (raw) {
+    callClaude(scanPrompt(subject, level), SCAN_TOKENS, true, function (ev) { prog.event(ev); }, SCAN_CHARS)
+      .then(function (res) {
         prog.finish();
-        var data = parseJson(raw);
+        var parsed = parseJson(res);
+        var data = parsed.data;
         clearStatus();
         scanBtn.disabled = false;
         scanBtn.textContent = "Scan the frontier";
@@ -1820,6 +1969,7 @@
           stamp: todayStamp(),
           ts: Date.now(),
           data: data,
+          truncated: parsed.truncated,
           plans: (previous && previous.plans) || {}
         };
         if (previous) {
@@ -2117,7 +2267,8 @@
   var PROV_ROWS = [
     ["peer", "Peer-reviewed", "A refereed journal or refereed conference proceedings. Other researchers read it before you did."],
     ["preprint", "Preprint", "arXiv, bioRxiv, SSRN, PhilPapers, or any server with no referee between the author and you. It may be excellent. Nobody has checked."],
-    ["secondary", "Secondary coverage", "A news article, magazine piece, or press release describing work published elsewhere. Cite the study, never the story about the study."]
+    ["secondary", "Secondary coverage", "A news article, magazine piece, or press release describing work published elsewhere. Cite the study, never the story about the study."],
+    ["ungraded", "Ungraded", "Claude returned no grade, or a grade nothing could be made of. Treat it as unverified until you have opened the source yourself."]
   ];
 
   var TRACT_ROWS = [
