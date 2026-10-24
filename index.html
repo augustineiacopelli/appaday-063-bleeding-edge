@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="manifest" href="https://augustineiacopelli.github.io/appaday/manifests/063.webmanifest">
 <script src="https://augustineiacopelli.github.io/appaday/save.js" defer></script>
+<script src="https://augustineiacopelli.github.io/appaday/keys.js" data-app="063" data-legacy-key="bleedingedge.apikey" data-accent="#1F7A8C" defer></script>
 <title>Bleeding Edge | AppADay 063</title>
 <meta name="description" content="Enter any subject area and see where its research frontier actually is: active fronts, recent findings graded by provenance, methods worth borrowing from neighboring fields, and the open ground nobody has claimed yet.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -910,7 +911,6 @@
   ];
 
   var LS = {
-    apikey: "bleedingedge.apikey",
     level: "bleedingedge.level",
     model: "bleedingedge.model",
     watch: "bleedingedge.watch"
@@ -1001,7 +1001,7 @@
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } }
   function lsDel(k) { try { localStorage.removeItem(k); } catch (e) { /* noop */ } }
 
-  function getKey() { return (lsGet(LS.apikey) || "").trim(); }
+  function hasKey() { return !!(window.AppKeys && window.AppKeys.has()); }
 
   function modelIds() {
     var out = [];
@@ -1220,7 +1220,7 @@
 
   /* ---------------- key note ---------------- */
   function paintKeyNote() {
-    if (getKey()) {
+    if (hasKey()) {
       keyNote.innerHTML = "Running on " + esc(modelName(getModel())) +
         ". Claude searches the web live, so a scan takes about a minute. " +
         '<button class="linkish" id="editKey" type="button">Key and model</button>';
@@ -1231,6 +1231,8 @@
     var ek = document.getElementById("editKey");
     if (ek) { ek.addEventListener("click", openSettings); }
   }
+  window.addEventListener("appaday:keychange", function () { paintKeyNote(); });
+  document.addEventListener("DOMContentLoaded", function () { paintKeyNote(); });
 
   /* ---------------- progress ---------------- */
   var statusTimer = null;
@@ -1462,6 +1464,14 @@
 
   /* Resolves with the raw assistant text. The caller parses it. */
   function callClaude(prompt, maxTokens, useSearch, onEvent, estChars) {
+    var keyPromise = window.AppKeys ? window.AppKeys.get() : Promise.resolve(null);
+    return keyPromise.then(function (apiKey) {
+      if (!apiKey) { throw new Error("Add your Claude API key with the gear button to continue."); }
+      return callClaudeKeyed(apiKey, prompt, maxTokens, useSearch, onEvent, estChars);
+    });
+  }
+
+  function callClaudeKeyed(apiKey, prompt, maxTokens, useSearch, onEvent, estChars) {
     var report = onEvent || function () {};
     var body = {
       model: getModel(),
@@ -1478,7 +1488,7 @@
       headers: {
         "Content-Type": "application/json",
         "anthropic-dangerous-direct-browser-access": "true",
-        "x-api-key": getKey(),
+        "x-api-key": apiKey,
         "anthropic-version": "2023-06-01"
       },
       body: JSON.stringify(body)
@@ -1943,10 +1953,11 @@
   }
   resultsEl.addEventListener("click", onChartClick);
 
-  function runScan(forcedSubject, previous) {
+  async function runScan(forcedSubject, previous) {
     var subject = forcedSubject || subjectEl.value.trim();
     if (!subject) { subjectEl.focus(); toast("Name a subject first"); return; }
-    if (!getKey()) { openSettings(); return; }
+    if (!window.AppKeys) { showError("The key manager did not load. Check your connection and reload."); return; }
+    if (!(await window.AppKeys.get())) { toast("Add your Claude API key with the gear button to run a scan"); return; }
 
     var level = getLevel();
     var rescanBtn = document.getElementById("rescanBtn");
@@ -2208,10 +2219,7 @@
       '<div class="modal wide" role="dialog" aria-modal="true" aria-label="Settings">' +
         "<h3>Settings</h3>" +
         '<p class="sub">Bleeding Edge runs on your own Anthropic API key and uses Claude with web search turned on.</p>' +
-        '<label for="apiKeyInput">Anthropic API key</label>' +
-        '<input type="password" id="apiKeyInput" autocomplete="off" spellcheck="false" placeholder="sk-ant-...">' +
-        '<span class="help-text">Stored only in this browser, never sent anywhere but Anthropic. ' +
-        'Get a key at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>.</span>' +
+        '<div id="keyMount"><span class="help-text">The key manager is loading. If this stays, check your connection and reload.</span></div>' +
         '<p class="guide-h" style="margin-top:26px;">Model</p>' +
         '<div class="model-list" id="modelList" role="group" aria-label="Model">' + modelHtml + "</div>" +
         '<span class="help-text">A scan spends tokens on both the reading and the writing, and the web searches ' +
@@ -2219,14 +2227,11 @@
         "Changing the model takes effect on the next scan.</span>" +
         '<div class="modal-actions">' +
           '<button class="btn-close" id="closeSettings" type="button">Close</button>' +
-          '<button class="btn-save" id="saveSettings" type="button">Save key</button>' +
         "</div></div>";
 
     document.body.appendChild(overlay);
 
-    var input = document.getElementById("apiKeyInput");
-    input.value = getKey();
-    input.focus();
+    if (window.AppKeys) window.AppKeys.mountSettings(document.getElementById("keyMount"));
 
     document.getElementById("modelList").addEventListener("click", function (e) {
       var b = e.target.closest ? e.target.closest("[data-model]") : null;
@@ -2239,13 +2244,6 @@
       paintKeyNote();
     });
 
-    document.getElementById("saveSettings").addEventListener("click", function () {
-      var v = input.value.trim();
-      if (v) { lsSet(LS.apikey, v); } else { lsDel(LS.apikey); }
-      paintKeyNote();
-      closeSettings();
-      toast(v ? "Key saved" : "Key cleared");
-    });
     document.getElementById("closeSettings").addEventListener("click", closeSettings);
     overlay.addEventListener("click", function (e) {
       if (e.target === overlay) { closeSettings(); }
