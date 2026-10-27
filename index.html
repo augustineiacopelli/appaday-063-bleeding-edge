@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="manifest" href="https://augustineiacopelli.github.io/appaday/manifests/063.webmanifest">
 <script src="https://augustineiacopelli.github.io/appaday/save.js" defer></script>
+<script src="https://augustineiacopelli.github.io/appaday/models.js"></script>
 <script src="https://augustineiacopelli.github.io/appaday/keys.js" data-app="063" data-legacy-key="bleedingedge.apikey" data-accent="#1F7A8C" defer></script>
 <title>Bleeding Edge | AppADay 063</title>
 <meta name="description" content="Enter any subject area and see where its research frontier actually is: active fronts, recent findings graded by provenance, methods worth borrowing from neighboring fields, and the open ground nobody has claimed yet.">
@@ -874,13 +875,13 @@
 (function () {
   "use strict";
 
-  var CLAUDE_MODEL = "claude-sonnet-5";
+  var DEFAULT_TIER = "sonnet";
   var API_URL = "https://api.anthropic.com/v1/messages";
   var WEB_SEARCH_TOOL = "web_search_20250305";
   var MAX_SEARCHES = 6;
   var MAX_WATCHED = 12;
 
-  /* Output ceilings. Sonnet 5 and Opus 4.8 spend part of this budget on thinking
+  /* Output ceilings. Sonnet and Opus spend part of this budget on thinking
      before any of the brief is written, so these sit well above the payload size. */
   var SCAN_TOKENS = 16000;
   var PLAN_TOKENS = 4000;
@@ -889,26 +890,21 @@
   var SCAN_CHARS = 4200;
   var PLAN_CHARS = 1500;
 
+  /* Entries are tiers. The model ID and the name shown come from the portal models.js, so a new
+     model reaches this list without editing this file. */
   var MODELS = [
     {
-      id: "claude-sonnet-5",
-      name: "Sonnet 5",
+      id: "sonnet",
       cost: "Baseline cost",
-      note: "The default. On search-and-reason benchmarks it lands within half a point of Opus, for a fraction of the price."
+      note: "The default. Close to Opus on search-and-reason work, for a fraction of the price."
     },
     {
-      id: "claude-opus-4-8",
-      name: "Opus 4.8",
+      id: "opus",
       cost: "About 2.5x",
       note: "Sharper judgment. Worth the money for a Researcher brief, or when the provenance grades have to be right."
-    },
-    {
-      id: "claude-sonnet-4-6",
-      name: "Sonnet 4.6",
-      cost: "About 1.5x",
-      note: "The previous default across AppADay. Kept for parity, and for keys without access to the newer models."
     }
   ];
+  function modelId(tier) { return window.AppModels ? window.AppModels.id(tier) : ""; }
 
   var LS = {
     level: "bleedingedge.level",
@@ -1008,15 +1004,14 @@
     for (var i = 0; i < MODELS.length; i++) { out.push(MODELS[i].id); }
     return out;
   }
+  /* Returns the chosen tier. Older versions saved a model ID; AppModels maps it to its tier. */
   function getModel() {
-    var v = lsGet(LS.model);
-    return modelIds().indexOf(v) > -1 ? v : CLAUDE_MODEL;
+    var v = lsGet(LS.model) || DEFAULT_TIER;
+    if (window.AppModels) { v = window.AppModels.tier(v); }
+    return modelIds().indexOf(v) > -1 ? v : DEFAULT_TIER;
   }
   function modelName(id) {
-    for (var i = 0; i < MODELS.length; i++) {
-      if (MODELS[i].id === id) { return MODELS[i].name; }
-    }
-    return id || CLAUDE_MODEL;
+    return window.AppModels ? window.AppModels.label(id || DEFAULT_TIER) : (id || DEFAULT_TIER);
   }
   function getLevel() {
     var v = lsGet(LS.level);
@@ -1474,7 +1469,7 @@
   function callClaudeKeyed(apiKey, prompt, maxTokens, useSearch, onEvent, estChars) {
     var report = onEvent || function () {};
     var body = {
-      model: getModel(),
+      model: modelId(getModel()),
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt }]
     };
@@ -1983,7 +1978,7 @@
         var scan = {
           subject: subject,
           level: level,
-          model: getModel(),
+          model: modelId(getModel()),
           stamp: todayStamp(),
           ts: Date.now(),
           data: data,
@@ -2210,7 +2205,7 @@
       var m = MODELS[i];
       modelHtml += '<button class="model-opt" type="button" data-model="' + esc(m.id) + '" aria-pressed="' +
         (m.id === chosen ? "true" : "false") + '">' +
-        '<span class="m-head"><span class="m-name">' + esc(m.name) + "</span>" +
+        '<span class="m-head"><span class="m-name">' + esc(modelName(m.id)) + "</span>" +
         '<span class="m-cost">' + esc(m.cost) + "</span></span>" +
         '<span class="m-note">' + esc(m.note) + "</span></button>";
     }
@@ -2330,15 +2325,6 @@
   paintWatch();
 })();
 
-async function getModel(tier = 'sonnet') {
-  try {
-    const response = await fetch('../config.json');
-    const config = await response.json();
-    return config.models[tier];
-  } catch {
-    return 'claude-sonnet-5-5';
-  }
-}
 </script>
 </body>
 </html>
